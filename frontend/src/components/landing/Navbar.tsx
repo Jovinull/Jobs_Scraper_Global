@@ -3,18 +3,36 @@ import { Link } from "react-router-dom";
 import {
   Menu, X, MessageSquare,
   Sparkles, Workflow, BadgeDollarSign, RadioTower, Sun, Moon,
+  User,
+  Users2,
 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 
 const navLinks = [
   {
-    name: "Funcionalidades", href: "#features", sectionId: "features", icon: Sparkles
+    name: "Funcionalidades",
+    href: "/#features",
+    sectionId: "features",
+    icon: Sparkles
   },
   {
-    name: "Como Funciona", href: "#how-it-works", sectionId: "how-it-works", icon: Workflow
+    name: "Como Funciona",
+    href: "/#how-it-works",
+    sectionId: "how-it-works",
+    icon: Workflow
   },
   {
-    name: "Status", href: "#status", sectionId: "status", icon: RadioTower      },
+    name: "Pronto?",
+    href: "/#status",
+    sectionId: "pronto",
+    icon: RadioTower
+  },
+  {
+    name: "Time",
+    href: "/#time",
+    sectionId: "time",
+    icon: Users2,
+  }
 ];
 
 export function Navbar() {
@@ -75,13 +93,16 @@ export function Navbar() {
           : "opacity-0 -translate-y-full pointer-events-none"
       }`}
     >
-      <div className="flex items-center justify-between w-full h-11 px-3">
+      {/* Removeu o justify-between para os itens não se repelirem */}
+      <div className="flex items-center w-full h-11 px-4">
 
-        <Link to="/" className="flex font-bold items-center gap-2 shrink-0 dark:text-white text-black ">
+        {/* LOGO (Fica na esquerda) */}
+        <Link to="/" className="flex font-bold text-sm items-center gap-2 shrink-0 dark:text-white text-black">
           Painel de vagas
         </Link>
 
-        <div className="hidden md:flex items-center gap-1">
+        {/* LINKS CENTRALIZADOS (O mx-auto empurra o logo pra esquerda e as ações pra direita, mantendo o miolo junto) */}
+        <div className="hidden md:flex items-center gap-2 mx-auto bg-gray-50/50 dark:bg-neutral-900/30 px-2 py-1 rounded-full border border-gray-100 dark:border-neutral-800/50">
           {navLinks.map((link) => {
             const Icon     = link.icon;
             const isActive = activeSection === link.name;
@@ -90,7 +111,7 @@ export function Navbar() {
                 key={link.name}
                 href={link.href}
                 onClick={() => setActiveSection(link.name)}
-                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full transition-all duration-200 ${
+                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-200 ${
                   isActive
                     ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/30"
                     : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-black/5 dark:hover:bg-white/5"
@@ -106,25 +127,16 @@ export function Navbar() {
           })}
         </div>
 
-        <div className="hidden md:flex items-center gap-2">
-          <a
-            href="#contact"
-            className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 font-medium text-xs px-3 py-1.5 rounded-full transition-all hover:bg-black/5 dark:hover:bg-white/5"
-          >
-            Contato
-          </a>
-
-          <div className="w-[1px] h-4 bg-gray-200 dark:bg-neutral-800" />
-
+        <div className="hidden md:flex items-center gap-2 shrink-0">
           <Link
             to="/app"
             className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-semibold text-xs px-4 py-1.5 h-8 rounded-full transition-all shadow-md whitespace-nowrap"
           >
-            <MessageSquare size={13} />
+            <User size={13} />
             Acessar App
           </Link>
 
-          <div className="w-[1px] h-4 bg-gray-200 dark:bg-neutral-800" />
+          <div className="w-[1px] h-4 bg-gray-200 dark:bg-neutral-800 mx-1" />
 
           <button
             onClick={toggleTheme}
@@ -136,8 +148,7 @@ export function Navbar() {
           </button>
         </div>
 
-
-        <div className="md:hidden flex items-center gap-1">
+        <div className="md:hidden flex items-center gap-1 ml-auto">
           <button
             onClick={toggleTheme}
             type="button"
@@ -155,7 +166,6 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Menu mobile */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-[calc(100%+0.5rem)] left-0 w-full bg-white/95 dark:bg-[#0d1a14]/95 backdrop-blur-xl border border-gray-200 dark:border-emerald-900/30 rounded-2xl shadow-2xl p-3 flex flex-col gap-1">
           {navLinks.map((link) => {

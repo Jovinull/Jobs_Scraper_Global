@@ -71,7 +71,7 @@ export function HeroSection() {
             to="/app"
             className="group inline-flex items-center gap-2 bg-[#0c6b35] dark:bg-emerald-600 hover:bg-[#0a5a2d] dark:hover:bg-emerald-500 text-white font-semibold text-base py-3.5 px-8 rounded-full transition-all duration-300 shadow-lg shadow-emerald-500/20 hover:scale-[1.02]"
           >
-            Começar grátis
+            Comece Agora
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </Link>
           <a
