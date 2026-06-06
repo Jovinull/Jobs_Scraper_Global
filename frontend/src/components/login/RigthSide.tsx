@@ -1,6 +1,48 @@
 import { useState, FormEvent } from "react"
 import { Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { Image } from "@unpic/react"
+import { motion } from "framer-motion"
+
+const STATIC_STARS = Array.from({ length: 40 }).map((_, i) => {
+  const random = (min: number, max: number) => Math.random() * (max - min) + min;
+  return {
+    id: i,
+    top: `${random(0, 100)}%`,
+    left: `${random(0, 100)}%`,
+    size: random(1, 3),
+    delay: random(0, 5),
+    duration: random(2, 6),
+  };
+});
+
+function StarsBackground() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {STATIC_STARS.map((star) => (
+        <motion.div
+          key={star.id}
+          className="absolute rounded-full bg-blue-900/20 dark:bg-white"
+          style={{
+            top: star.top,
+            left: star.left,
+            width: star.size,
+            height: star.size,
+          }}
+          animate={{
+            opacity: [0.1, 0.8, 0.1],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: star.duration,
+            repeat: Infinity,
+            delay: star.delay,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function RightSide() {
   const [showPassword, setShowPassword] = useState(false)
@@ -46,13 +88,18 @@ export default function RightSide() {
   }
 
   return (
-    <main className="flex w-full lg:w-1/2 flex-col justify-between px-6 py-10 sm:px-12 lg:px-16 xl:px-20 bg-white dark:bg-slate-900 min-h-screen transition-colors duration-300">
+    <main className="relative flex w-full lg:w-1/2 flex-col justify-between px-6 py-10 sm:px-12 lg:px-16 xl:px-20 bg-white dark:bg-neutral-900 min-h-screen transition-colors duration-300 font-sans overflow-hidden">
 
-      <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-8">
+      <div className="absolute inset-0 pointer-events-none w-full h-full opacity-40 dark:opacity-100">
+        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[500px] bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent blur-[100px] rounded-full" />
+        <StarsBackground />
+      </div>
+
+      <div className="relative z-10 w-full max-w-2xl mx-auto flex flex-col items-center gap-8">
         <div className="w-full self-start">
           <a
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors group"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group"
           >
             <ArrowLeft className="h-4 w-4 transform group-hover:-translate-x-1 transition-transform" />
             Voltar para a página principal
@@ -60,23 +107,23 @@ export default function RightSide() {
         </div>
 
         <div className="text-center w-full">
-          <h2 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-white flex items-center justify-center gap-1 select-none">
+          <h2 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white flex items-center justify-center gap-1 select-none">
             <span className="text-blue-500 font-light">&lt;</span>
             Cand<span className="text-amber-500">!</span>Date<span className="text-purple-500">!</span>
             <span className="text-blue-500 font-light">&gt;</span>
           </h2>
-          <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-4 text-sm text-gray-500 dark:text-neutral-400 font-medium">
             Novo por aqui?{" "}
-            <a href="/register" className="font-semibold text-emerald-500 dark:text-emerald-400 underline underline-offset-2 hover:text-emerald-600 transition-colors">
+            <a href="/register" className="font-semibold bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400 underline underline-offset-2 hover:opacity-80 transition-opacity">
               Cadastre-se
             </a>
           </p>
         </div>
       </div>
 
-      <form className="space-y-6 w-full max-w-2xl mx-auto" onSubmit={handleSubmit}>
+      <form className="relative z-10 space-y-6 w-full max-w-2xl mx-auto my-auto" onSubmit={handleSubmit}>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+          <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-1.5">
             Email
           </label>
           <input
@@ -85,17 +132,17 @@ export default function RightSide() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Ex: bene17@gmail.com"
-            className={`w-full px-4 py-3.5 rounded-xl border bg-white dark:bg-slate-800 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 transition-shadow shadow-sm ${
+            className={`w-full px-4 py-3.5 rounded-xl border bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 transition-all shadow-sm ${
               emailError
-                ? "border-red-500 focus:ring-red-500 dark:border-red-500"
-                : "border-neutral-300 dark:border-slate-700 focus:ring-emerald-500"
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-200 dark:border-neutral-700 focus:ring-blue-500 focus:border-transparent"
             }`}
           />
           {emailError && <p className="mt-1.5 text-xs text-red-500 font-medium">{emailError}</p>}
         </div>
 
         <div>
-          <label htmlFor="senha" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+          <label htmlFor="senha" className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-1.5">
             Senha
           </label>
           <div className="relative">
@@ -105,16 +152,16 @@ export default function RightSide() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Ex: ••••••••••••"
-              className={`w-full px-4 py-3.5 rounded-xl border bg-white dark:bg-slate-800 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 transition-shadow shadow-sm ${
+              className={`w-full px-4 py-3.5 rounded-xl border bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 transition-all shadow-sm ${
                 passwordError
-                  ? "border-red-500 focus:ring-red-500 dark:border-red-500"
-                  : "border-neutral-300 dark:border-slate-700 focus:ring-emerald-500"
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-200 dark:border-neutral-700 focus:ring-blue-500 focus:border-transparent"
               }`}
             />
             <button
               type="button"
               onClick={handleRevealPassword}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 dark:text-neutral-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -122,62 +169,50 @@ export default function RightSide() {
           {passwordError && <p className="mt-1.5 text-xs text-red-500 font-medium">{passwordError}</p>}
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-[#004726] dark:bg-emerald-600 text-white py-3.5 px-4 rounded-xl font-bold text-base hover:bg-[#00331a] dark:hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors shadow-sm"
-        >
-          Entrar
-        </button>
-
-        <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center gap-2 cursor-pointer text-neutral-700 dark:text-neutral-300 font-medium select-none">
+        <div className="flex items-center justify-between text-sm py-1">
+          <label className="flex items-center gap-2 cursor-pointer text-gray-600 dark:text-neutral-400 font-medium select-none">
             <input
               type="checkbox"
               defaultChecked
-              className="h-4 w-4 rounded border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-emerald-600 focus:ring-emerald-500 accent-[#004726]"
+              className="h-4 w-4 rounded border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-blue-600 focus:ring-blue-500 accent-blue-600"
             />
             Lembre de mim
           </label>
-          <a href="#" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+          <a href="#" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 transition-all">
             Esqueceu a senha?
           </a>
         </div>
+
+        <motion.button
+          type="submit"
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 hover:opacity-95 text-white py-3.5 px-4 rounded-xl font-bold text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-md shadow-blue-500/10 cursor-pointer"
+        >
+          Entrar
+        </motion.button>
       </form>
 
-      <div className="w-full max-w-2xl mx-auto">
+      <div className="relative z-10 w-full max-w-2xl mx-auto">
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-neutral-200 dark:border-slate-700" />
+            <div className="w-full border-t border-gray-200 dark:border-neutral-800" />
           </div>
-          <div className="relative flex justify-center text-xs text-neutral-400 dark:text-neutral-500 uppercase select-none">
-            <span className="bg-white dark:bg-slate-900 px-4 font-medium tracking-wider">Ou faça login com</span>
+          <div className="relative flex justify-center text-xs text-gray-400 dark:text-neutral-500 uppercase select-none">
+            <span className="bg-white dark:bg-neutral-900 px-4 font-semibold tracking-wider">Ou faça login com</span>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          <button className="flex justify-center items-center py-3 px-4 border border-neutral-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-neutral-50 dark:hover:bg-slate-700 transition-all shadow-sm">
-            <Image
-              src="/google.png"
-              alt="Google"
-              width={20}
-              height={20}
-              className="object-contain"
-            />
+          <button className="flex justify-center items-center py-3 px-4 border border-gray-200 dark:border-neutral-800 rounded-xl bg-white/50 dark:bg-neutral-800/50 hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-all shadow-sm cursor-pointer">
+            <Image src="/google.png" alt="Google" width={20} height={20} className="object-contain" />
           </button>
-
-          <button className="flex justify-center items-center py-3 px-4 border border-neutral-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-neutral-50 dark:hover:bg-slate-700 transition-all shadow-sm">
-            <Image
-              src="/facebook.png"
-              alt="Facebook"
-              width={20}
-              height={20}
-              className="object-contain"
-            />
+          <button className="flex justify-center items-center py-3 px-4 border border-gray-200 dark:border-neutral-800 rounded-xl bg-white/50 dark:bg-neutral-800/50 hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-all shadow-sm cursor-pointer">
+            <Image src="/facebook.png" alt="Facebook" width={20} height={20} className="object-contain" />
           </button>
-
-          <button className="flex justify-center items-center py-3 px-4 border border-neutral-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-neutral-50 dark:hover:bg-slate-700 transition-all shadow-sm">
-            <svg className="h-5 w-5 fill-black dark:fill-white transition-colors" viewBox="0 0 24 24">
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.21.67-2.93 1.49-.62.69-1.16 1.84-1.01 2.96 1.12.09 2.27-.58 2.95-1.39z"/>
+          <button className="flex justify-center items-center py-3 px-4 border border-gray-200 dark:border-neutral-800 rounded-xl bg-white/50 dark:bg-neutral-800/50 hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-all shadow-sm cursor-pointer">
+            <svg className="h-5 w-5 fill-gray-900 dark:fill-white transition-colors" viewBox="0 0 24 24">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.21.67-2.93 1.49-.62.69-1.16 1.84-1.01 2.96 1.12.09 2.27-.58 2.95-1.39z" />
             </svg>
           </button>
         </div>

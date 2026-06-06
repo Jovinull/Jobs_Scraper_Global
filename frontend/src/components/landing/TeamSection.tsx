@@ -59,10 +59,10 @@ export default function TeamSection() {
         <h2 className="text-3xl font-bold mb-2 text-gray-800 dark:text-white">
           Nosso <span className="bg-gradient-to-r from-blue-600 to-violet-500 bg-clip-text text-transparent">Time</span> de Contribuidores
         </h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-10 text-sm sm:text-base">
-          Conheça as mentes brilhantes por trás do <span className="text-blue-500 font-light">&lt;</span>
-          Cand<span className="text-amber-500">!</span>Date<span className="text-purple-500">!</span>
-          <span className="text-blue-500 font-light">&gt;</span>
+        <p className="text-gray-500 dark:text-gray-400 mb-10 text-sm sm:text-base ">
+          Conheça as mentes brilhantes por trás do <p className='font-bold text-white'><span className="text-blue-500 font-bold">&lt;</span>
+          Cand<span className="text-amber-500 font-bold">!</span>Date< span className="text-purple-500 font-bold">!</span>
+          <span className="text-blue-500 font-bold">&gt;</span> </p>
         </p>
 
         <div className="w-full block min-h-[300px] slider-container">
