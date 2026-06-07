@@ -201,6 +201,7 @@ export default function TeamSection() {
             {contributors.map((user) => (
               <SwiperSlide key={user.id} className="h-full inline-block">
                 <div className="flex flex-col items-center p-6 border border-gray-100 dark:border-zinc-800/80 rounded-2xl text-center bg-white dark:bg-zinc-900/40 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 min-h-[260px] h-full justify-between">
+                  
                   <div className="flex flex-col items-center w-full">
                     <img
                       src={user.avatar_url}
