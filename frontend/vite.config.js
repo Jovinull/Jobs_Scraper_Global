@@ -16,14 +16,11 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Deixamos o /api padrão que você já tinha
       '/api': {
         target: apiProxyTarget,
         changeOrigin: true,
         secure: false,
       },
-      // Se o seu formulário faz fetch para '/auth/register', o Vite vai mandar direto
-      // para o NestJS. Se o Nest usar o prefixo global '/api', o rewrite adiciona automaticamente.
       '/auth': {
         target: apiProxyTarget,
         changeOrigin: true,
@@ -33,8 +30,6 @@ export default defineConfig({
             console.error('Erro no proxy do Vite para /auth:', err.message);
           });
         },
-        // Se o seu NestJS usa setGlobalPrefix('api'), descomente a linha abaixo:
-        // rewrite: (path) => path.replace(/^\/auth/, '/api/auth'),
       },
     },
   },
