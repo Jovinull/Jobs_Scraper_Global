@@ -32,3 +32,25 @@ export default defineConfig({
     }
   }
 })
+        target: apiProxyTarget,
+        changeOrigin: true,
+        secure: false,
+      },
+      '/auth': {
+        target: apiProxyTarget,
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.error('Erro no proxy do Vite para /auth:', err.message);
+          });
+        },
+      },
+    },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.js'],
+  },
+})

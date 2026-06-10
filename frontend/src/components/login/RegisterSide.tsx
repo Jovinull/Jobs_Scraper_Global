@@ -1,11 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { register } from "@/services/authService"; // ← MUDE para register
+import { useState, FormEvent } from "react";
+import { Eye, EyeOff, ArrowLeft, Github, Linkedin } from "lucide-react";
 import { Image } from "@unpic/react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { FormEvent, useState } from "react";
 import PhoneInput from "react-phone-number-input";
+
+import { api } from "@/services/api";
 import "react-phone-number-input/style.css";
+import { useNavigate } from "react-router-dom";
+
+interface ValidationError {
+  _errors?: string[];
+}
 
 const STATIC_STARS = Array.from({ length: 40 }).map((_, i) => {
   const random = (min: number, max: number) => Math.random() * (max - min) + min;
@@ -49,6 +58,8 @@ function StarsBackground() {
 }
 
 export default function RegisterSide() {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -64,6 +75,8 @@ export default function RegisterSide() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [globalError, setGlobalError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleRevealPassword = () => setShowPassword((prev) => !prev);
 
@@ -75,6 +88,36 @@ export default function RegisterSide() {
     return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
   };
 
+  const handleOAuthLogin = async (provider: "google" | "github" | "linkedin") => {
+    try {
+      setGlobalError("");
+      setIsSubmitting(true);
+
+      const response = await api.get(`/auth/${provider}/url`);
+
+      if (response.data?.url) {
+        window.location.href = response.data.url;
+      } else {
+        throw new Error("URL de redirecionamento não retornada pelo servidor.");
+      }
+    } catch (error: unknown) {
+      console.error("Erro ao iniciar fluxo OAuth:", error);
+
+      let apiError = `Não foi possível conectar ao provedor ${provider}.`;
+
+      // Verifica de forma segura se o erro contém um objeto response vindo do Axios
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { data?: { error?: string } } };
+        if (typeof axiosError.response?.data?.error === "string") {
+          apiError = axiosError.response.data.error;
+        }
+      }
+
+      setGlobalError(apiError);
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setNomeError("");
@@ -83,6 +126,7 @@ export default function RegisterSide() {
     setPasswordError("");
     setCpfError("");
     setApiError("");
+    setGlobalError("");
 
     let isValid = true;
 
@@ -135,6 +179,56 @@ export default function RegisterSide() {
         setApiError(error.message || "Erro ao cadastrar. Tente novamente.");
       } finally {
         setIsLoading(false);
+    if (!isValid) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await api.post("/auth/register", {
+        name: nome,
+        email: email,
+        phone: telefone,
+        password: password,
+        cpf: cpf.replace(/\D/g, ""),
+      });
+
+      console.log("Cadastro efetuado com sucesso!", response.data);
+      navigate("/app");
+
+    } catch (error: unknown) {
+      console.error("Erro na requisição de cadastro:", error);
+      setIsSubmitting(false);
+
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: {
+            data?: {
+              error?: string | Record<string, ValidationError>;
+              message?: string;
+            };
+          };
+        };
+
+        const data = axiosError.response?.data;
+
+        if (data && typeof data.error === "object") {
+          const validationErrors = data.error as Record<string, ValidationError>;
+
+          if (validationErrors.name?._errors?.[0]) setNomeError(validationErrors.name._errors[0]);
+          if (validationErrors.email?._errors?.[0]) setEmailError(validationErrors.email._errors[0]);
+          if (validationErrors.phone?._errors?.[0]) setTelefoneError(validationErrors.phone._errors[0]);
+          if (validationErrors.password?._errors?.[0]) setPasswordError(validationErrors.password._errors[0]);
+          if (validationErrors.cpf?._errors?.[0]) setCpfError(validationErrors.cpf._errors[0]);
+        } else {
+          const fallbackMsg = data?.message || (typeof data?.error === "string" ? data.error : "") || "Erro ao efetuar o cadastro.";
+          if (fallbackMsg.toLowerCase().includes("email")) {
+            setEmailError("Este endereço de e-mail já está em uso.");
+          } else {
+            setGlobalError(fallbackMsg);
+          }
+        }
+      } else {
+        setGlobalError("Ocorreu um erro inesperado de conexão.");
       }
     }
   };
@@ -178,6 +272,9 @@ export default function RegisterSide() {
         {apiError && (
           <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
             <p className="text-sm text-red-600 dark:text-red-400 text-center">{apiError}</p>
+        {globalError && (
+          <div className="p-3.5 bg-red-500/10 border border-red-500/30 text-red-500 rounded-xl text-sm font-semibold text-center backdrop-blur-sm">
+            {globalError}
           </div>
         )}
 
@@ -188,6 +285,7 @@ export default function RegisterSide() {
           <input
             id="nome"
             type="text"
+            disabled={isSubmitting}
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             placeholder="benevanio"
@@ -206,6 +304,7 @@ export default function RegisterSide() {
           <input
             id="email"
             type="email"
+            disabled={isSubmitting}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="benevanio@dev.com.br"
@@ -227,6 +326,7 @@ export default function RegisterSide() {
             <PhoneInput
               international
               defaultCountry="BR"
+              disabled={isSubmitting}
               value={telefone}
               onChange={setTelefone}
               disabled={isLoading}
@@ -245,6 +345,7 @@ export default function RegisterSide() {
             <input
               id="senha"
               type={showPassword ? "text" : "password"}
+              disabled={isSubmitting}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Ex: ••••••••••••"
@@ -255,6 +356,7 @@ export default function RegisterSide() {
             />
             <button
               type="button"
+              disabled={isSubmitting}
               onClick={handleRevealPassword}
               disabled={isLoading}
               className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 dark:text-neutral-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
@@ -272,6 +374,7 @@ export default function RegisterSide() {
           <input
             id="cpf"
             type="text"
+            disabled={isSubmitting}
             value={cpf}
             onChange={(e) => setCpf(formatCpf(e.target.value))}
             placeholder="091.000.000-00"
@@ -291,6 +394,12 @@ export default function RegisterSide() {
           className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 hover:opacity-95 text-white py-3.5 px-4 rounded-xl font-bold text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-md shadow-blue-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? "Cadastrando..." : "Cadastrar"}
+          disabled={isSubmitting}
+          whileHover={{ scale: isSubmitting ? 1 : 1.01 }}
+          whileTap={{ scale: isSubmitting ? 1 : 0.99 }}
+          className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 hover:opacity-95 text-white py-3.5 px-4 rounded-xl font-bold text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-md shadow-blue-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? "Cadastrando..." : "Cadastrar"}
         </motion.button>
       </form>
 
@@ -315,6 +424,31 @@ export default function RegisterSide() {
             <svg className="h-5 w-5 fill-gray-900 dark:fill-white transition-colors" viewBox="0 0 24 24">
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.21.67-2.93 1.49-.62.69-1.16 1.84-1.01 2.96 1.12.09 2.27-.58 2.95-1.39z"/>
             </svg>
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => handleOAuthLogin("google")}
+            className="flex justify-center items-center py-3 px-4 border border-gray-200 dark:border-neutral-800 rounded-xl bg-white/50 dark:bg-neutral-800/50 hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Image src="/google.png" alt="Google" width={20} height={20} className="object-contain" />
+          </button>
+
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => handleOAuthLogin("linkedin")}
+            className="flex justify-center items-center py-3 px-4 border border-gray-200 dark:border-neutral-800 rounded-xl bg-white/50 dark:bg-neutral-800/50 hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Linkedin className="h-5 text-blue-500" />
+          </button>
+
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => handleOAuthLogin("github")}
+            className="flex justify-center items-center py-3 px-4 border border-gray-200 dark:border-neutral-800 rounded-xl bg-white/50 dark:bg-neutral-800/50 hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Github className="h-5 text-gray-900 dark:text-white" />
           </button>
         </div>
       </div>

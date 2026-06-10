@@ -7,6 +7,9 @@ const mockLogin = vi.fn();
 vi.mock("@/services/authService", () => ({
   login: (...args: any[]) => mockLogin(...args),
 }));
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import "@testing-library/jest-dom/vitest";
 
 vi.mock("@unpic/react", () => ({
   Image: (props: any) => <img {...props} alt={props.alt} />,
@@ -16,6 +19,23 @@ vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  },
+}));
+
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => vi.fn(),
+}));
+
+const mockLogin = vi.fn();
+vi.mock("@/context/AuthContext", () => ({
+  useAuth: () => ({
+    login: mockLogin,
+  }),
+}));
+
+vi.mock("@/services/api", () => ({
+  api: {
+    get: vi.fn(),
   },
 }));
 
@@ -48,6 +68,8 @@ describe("RigthSide", () => {
     expect(screen.getByRole("button", { name: /entrar/i })).toBeInTheDocument();
     expect(screen.getByText(/cadastre-se/i)).toBeInTheDocument();
     expect(screen.getByText(/ou faça login com/i)).toBeInTheDocument();
+  beforeEach(() => {
+    mockLogin.mockClear();
   });
 
   it("alterna visibilidade da senha ao clicar no botão", () => {
@@ -118,6 +140,8 @@ describe("RigthSide", () => {
   it("exibe erro genérico quando API retorna erro sem mensagem", async () => {
     mockLogin.mockRejectedValueOnce(new Error(""));
     
+  it("envia formulário valido", async () => {
+    mockLogin.mockResolvedValueOnce(undefined);
     render(<RigthSide />);
     
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "teste@email.com" } });
@@ -164,6 +188,9 @@ describe("RigthSide", () => {
     
     await waitFor(() => {
       expect(mockLogin).not.toHaveBeenCalled();
+    expect(mockLogin).toHaveBeenCalledWith({
+      email: "qa@teste.com",
+      password: "123456",
     });
   });
 
