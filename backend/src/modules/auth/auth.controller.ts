@@ -65,7 +65,7 @@ export class AuthController {
     const session = await getIronSession<SessionData>(req, res, sessionOptions);
 
     try {
-      const callbackUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+      const callbackUrl = `${process.env.APP_URL}/auth/${req.params.provider}/callback?${new URLSearchParams(req.query as Record<string, string>).toString()}`;
 
       const params = AuthCallbackParamsSchema.parse({
         provider: req.params.provider,

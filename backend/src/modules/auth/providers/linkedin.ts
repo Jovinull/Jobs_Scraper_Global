@@ -1,8 +1,4 @@
-import {
-  authorizationCodeGrant,
-  buildAuthorizationUrl,
-  discovery,
-} from "openid-client";
+import { discovery } from "openid-client";
 import { OAuthProfile } from "../../types/auth.types";
 
 let _config: Awaited<ReturnType<typeof discovery>> | null = null;
@@ -20,59 +16,63 @@ async function getConfig() {
 }
 
 export async function getLinkedinAuthUrl(state: string): Promise<string> {
-  const config = await getConfig();
-
-  const url = buildAuthorizationUrl(config, {
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: process.env.LINKEDIN_CLIENT_ID!,
     redirect_uri: `${process.env.APP_URL}/auth/linkedin/callback`,
     scope: "openid profile email",
     state,
   });
 
-  return url.href;
+  return `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
 }
 
 export async function exchangeLinkedinCode({
   code,
-  state,
 }: {
   code: string;
   state?: string;
 }): Promise<OAuthProfile> {
-  const config = await getConfig();
+  const params = new URLSearchParams({
+    grant_type: "authorization_code",
+    code,
+    redirect_uri: `${process.env.APP_URL}/auth/linkedin/callback`,
+    client_id: process.env.LINKEDIN_CLIENT_ID!,
+    client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+  });
 
-  const tokens = await authorizationCodeGrant(
-    config,
-    new URL(
-      `${process.env.APP_URL}/auth/linkedin/callback?code=${code}&state=${state}`,
-    ),
+  const tokenRes = await fetch(
+    "https://www.linkedin.com/oauth/v2/accessToken",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    },
   );
 
-  const claims = tokens.claims();
+  const tokenData = await tokenRes.json();
 
-  if (!claims || typeof claims !== "object") {
-    throw new Error("Invalid LinkedIn claims");
-  }
+  if (!tokenRes.ok)
+    throw new Error(tokenData.error_description || "Token exchange failed");
 
-  const getString = (value: unknown): string | undefined =>
-    typeof value === "string" ? value : undefined;
+  // Busca dados do usuário via userinfo
+  const userRes = await fetch("https://api.linkedin.com/v2/userinfo", {
+    headers: { Authorization: `Bearer ${tokenData.access_token}` },
+  });
 
-  const getNumber = (value: unknown): number | undefined =>
-    typeof value === "number" ? value : undefined;
+  const user = await userRes.json();
 
   return {
-    id: getString(claims.sub) ?? "",
-
-    email: getString(claims.email),
-    name: getString(claims.name),
-
-    given_name: getString(claims.given_name),
-    family_name: getString(claims.family_name),
-
-    picture: getString(claims.picture),
-
-    access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
-
-    expires_at: getNumber(claims.exp),
+    id: user.sub ?? "",
+    email: user.email,
+    name: user.name,
+    given_name: user.given_name,
+    family_name: user.family_name,
+    picture: user.picture,
+    access_token: tokenData.access_token,
+    refresh_token: tokenData.refresh_token,
+    expires_at: tokenData.expires_in
+      ? Math.floor(Date.now() / 1000) + tokenData.expires_in
+      : undefined,
   };
 }
