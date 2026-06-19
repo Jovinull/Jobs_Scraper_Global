@@ -32,7 +32,7 @@ export class CredentialsService {
   async register(
     input: RegisterInput,
   ): Promise<{ user: User; session: Session }> {
-    const { email, password, name, phone, cpf, technologies, level } = RegisterSchema.parse(input);
+    const { email, password, name, phone, cpf, technologies, level, role } = RegisterSchema.parse(input);
 
     const existingCredential = await db.query.credentials.findFirst({
       where: eq(credentials.email, email),
@@ -57,7 +57,8 @@ export class CredentialsService {
         phone,
         cpf,
         technologies,
-        level
+        level,
+        role
       })
       .returning();
 
